@@ -2,8 +2,7 @@
 // Created by 1alex on 29.03.2026.
 //
 
-#ifndef UNTITLED3_DFS_VISITOR_H
-#define UNTITLED3_DFS_VISITOR_H
+
 #pragma once
 
 #include "graph.h"
@@ -91,5 +90,3 @@ private:
 };
 
 } // namespace grapho
-
-#endif //UNTITLED3_DFS_VISITOR_H
