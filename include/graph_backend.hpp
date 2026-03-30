@@ -79,6 +79,55 @@ public:
 };
 
 
+// БЕКЕНД НА ОСНОВЕ МАТРИЦЫ СМЕЖНОСТИ
+class AdjacencyMatrixBackend : public GraphBackend {
+private:
+    std::vector<std::vector<double>> matrix_;
+    std::unordered_map<int, int> vertexToIndex_;
+    std::vector<int> indexToVertex_;
+    bool directed_;
+    int edgeCount_;
+    
+    // Получить индекс вершины во внутренней нумерации
+    int getIndex(int vertex) const;
+
+    // Добавить вершину во внутреннюю структуру
+    int addIndex(int vertex);
+
+    // Расширить матрицу при необходимости
+    void ensureCapacity(int minSize);
+    
+public:
+    explicit AdjacencyMatrixBackend(bool directed = false, int initialSize = 64);
+    AdjacencyMatrixBackend(const AdjacencyMatrixBackend& other);
+    AdjacencyMatrixBackend& operator=(const AdjacencyMatrixBackend& other);
+    
+    void addVertex(int vertex) override;
+    void removeVertex(int vertex) override;
+    bool hasVertex(int vertex) const override;
+    int vertexCount() const override;
+    std::vector<int> getAllVertices() const override;
+    
+    void addEdge(const Edge& edge) override;
+    void removeEdge(int from, int to) override;
+    bool hasEdge(int from, int to) const override;
+    int edgeCount() const override;
+    std::vector<Edge> getAllEdges() const override;
+    
+    std::vector<int> getNeighbors(int vertex) const override;
+    std::vector<Edge> getIncidentEdges(int vertex) const override;
+    
+    int getDegree(int vertex) const override;
+    int getInDegree(int vertex) const override;
+    int getOutDegree(int vertex) const override;
+    
+    bool isDirected() const override { return directed_; }
+    void setDirected(bool directed) override;
+
+    void clear() override;
+    std::unique_ptr<GraphBackend> clone() const override;
+};
+
 // ФАБРИКА ДЛЯ СОЗДАНИЯ БЕКЕНДОВ
 class BackendFactory {
 public:
