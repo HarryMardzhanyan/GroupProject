@@ -12,81 +12,59 @@
 namespace grapho {
 
 
-class DFSVisitor {
-public:
-    enum class VertexState { White, Gray, Black };
+    class DFSVisitor {
+    public:
 
-    virtual ~DFSVisitor() = default;
+        virtual ~DFSVisitor() = default;
 
+        // Обход ВСЕГО графа (всех компонент)
+        void run(const Graph& g) {
+            std::unordered_map<int, VertexState> states;
+            for (int v : g.getAllVertices()) states[v] = VertexState::White;
 
-    void run(const Graph& g) {
-        std::unordered_map<int, VertexState> states;
-        for (int v : g.getAllVertices()) {
-            states[v] = VertexState::White;
-        }
-
-        for (int v : g.getAllVertices()) {
-            if (states[v] == VertexState::White) {
-                dfsRecursive(g, v, states);
-            }
-        }
-    }
-
-
-    void runFrom(const Graph& g, int startVertex) {
-        if (!g.hasVertex(startVertex)) return;
-
-        std::unordered_map<int, VertexState> states;
-        for (int v : g.getAllVertices()) {
-            states[v] = VertexState::White;
-        }
-
-        dfsRecursive(g, startVertex, states);
-    }
-
-protected:
-    // --- Виртуальные методы (Hooks) ---
-
-    // Вызывается при первом посещении вершины (стала серой)
-    virtual void discoverVertex(int v) {}
-
-    // Вызывается перед тем, как перейти по ребру (v -> u)
-    virtual void examineEdge(int v, int u) {}
-
-    // Вызывается, если ребро ведет в белую вершину (новое дерево DFS)
-    virtual void treeEdge(int v, int u) {}
-
-    // Вызывается, если ребро ведет в серую вершину (найден цикл в орграфе)
-    virtual void backEdge(int v, int u) {}
-
-    // Вызывается, если ребро ведет в черную вершину (перекрестное ребро)
-    virtual void forwardOrCrossEdge(int v, int u) {}
-
-    // Вызывается, когда вершина и все её потомки полностью обработаны (стала черной)
-    virtual void finishVertex(int v) {}
-
-private:
-    void dfsRecursive(const Graph& g, int v, std::unordered_map<int, VertexState>& states) {
-        states[v] = VertexState::Gray;
-        discoverVertex(v);
-
-        for (const auto& edge : g.getIncidentEdges(v)) {
-            int u = edge.to;
-            examineEdge(v, u);
-
-            if (states[u] == VertexState::White) {
-                treeEdge(v, u);
-                dfsRecursive(g, u, states);
-            } else if (states[u] == VertexState::Gray) {
-                backEdge(v, u);
-            } else {
-                forwardOrCrossEdge(v, u);
+            for (int v : g.getAllVertices()) {
+                if (states[v] == VertexState::White) {
+                    runFrom(g, v, states); // Используем общий метод
+                }
             }
         }
 
-        states[v] = VertexState::Black;
-        finishVertex(v);
-    }
-};
+        // Обход конкретной компоненты
+        // Теперь принимает states по ссылке, чтобы сохранять прогресс посещения
+        void runFrom(const Graph& g, int startVertex, std::unordered_map<int, VertexState>& states) {
+            if (!g.hasVertex(startVertex) || states[startVertex] != VertexState::White) return;
+
+            states[startVertex] = VertexState::Gray;
+            discoverVertex(startVertex);
+
+            for (const auto& edge : g.getIncidentEdges(startVertex)) {
+                int u = edge.to;
+                examineEdge(startVertex, u);
+
+                if (states[u] == VertexState::White) {
+                    treeEdge(startVertex, u);
+                    runFrom(g, u, states); // Рекурсия через runFrom
+                    afterTreeEdge(startVertex, u); // Хук для мостов/точек сочленения
+                } else if (states[u] == VertexState::Gray) {
+                    backEdge(startVertex, u);
+                } else {
+                    forwardOrCrossEdge(startVertex, u);
+                }
+            }
+
+            states[startVertex] = VertexState::Black;
+            finishVertex(startVertex);
+        }
+
+    protected:
+        virtual void discoverVertex(int v) {}
+        virtual void examineEdge(int v, int u) {}
+        virtual void treeEdge(int v, int u) {}
+        virtual void afterTreeEdge(int v, int u) {} // Важно для алгоритмов на "обратном пути"
+        virtual void backEdge(int v, int u) {}
+        virtual void forwardOrCrossEdge(int v, int u) {}
+        virtual void finishVertex(int v) {}
+    };
+
 
 } // namespace grapho

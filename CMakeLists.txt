@@ -10,14 +10,15 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(GLOBAL_WARNINGS "-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wunused")
 endif()
 
-# Создаём библиотеку из общих исходников
-add_library(
-    src/graph.cpp
-    src/graph_backend.cpp
+# Создаём библиотеку и даем ей имя graph_lib
+add_library(graph_lib STATIC
+        src/graph.cpp
+        src/graph_backend.cpp
+        src/metrics.cpp
 )
 
-# Добавляем заголовочные файлы для библиотеки
-target_include_directories(calc_lib PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/external
+# Настраиваем пути к заголовочным файлам для ЭТОЙ библиотеки
+target_include_directories(graph_lib PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/external
 )
