@@ -24,36 +24,37 @@ namespace grapho {
 
             for (int v : g.getAllVertices()) {
                 if (states[v] == VertexState::White) {
-                    runFrom(g, v, states); // Используем общий метод
+                    runFrom(g, v, -1,states);
                 }
             }
         }
 
-        // Обход конкретной компоненты
-        // Теперь принимает states по ссылке, чтобы сохранять прогресс посещения
-        void runFrom(const Graph& g, int startVertex, std::unordered_map<int, VertexState>& states) {
-            if (!g.hasVertex(startVertex) || states[startVertex] != VertexState::White) return;
 
-            states[startVertex] = VertexState::Gray;
-            discoverVertex(startVertex);
+        void runFrom(const Graph& g, int u, int p, std::unordered_map<int, VertexState>& states) {
+            states[u] = VertexState::Gray;
+            discoverVertex(u);
 
-            for (const auto& edge : g.getIncidentEdges(startVertex)) {
-                int u = edge.to;
-                examineEdge(startVertex, u);
+            for (const auto& edge : g.getIncidentEdges(u)) {
+                int v = edge.to;
 
-                if (states[u] == VertexState::White) {
-                    treeEdge(startVertex, u);
-                    runFrom(g, u, states); // Рекурсия через runFrom
-                    afterTreeEdge(startVertex, u); // Хук для мостов/точек сочленения
-                } else if (states[u] == VertexState::Gray) {
-                    backEdge(startVertex, u);
+
+                if (v == p) continue;
+
+                examineEdge(u, v);
+
+                if (states[v] == VertexState::White) {
+                    treeEdge(u, v);
+                    runFrom(g, v, u, states);
+                    afterTreeEdge(u, v);
+                } else if (states[v] == VertexState::Gray) {
+                    backEdge(u, v);
                 } else {
-                    forwardOrCrossEdge(startVertex, u);
+                    forwardOrCrossEdge(u, v);
                 }
             }
 
-            states[startVertex] = VertexState::Black;
-            finishVertex(startVertex);
+            states[u] = VertexState::Black;
+            finishVertex(u);
         }
 
     protected:

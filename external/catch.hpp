@@ -10692,7 +10692,7 @@ namespace Catch {
         try {
 #ifdef __OBJC__
             // In Objective-C try objective-c exceptions first
-            @try {
+            try {
                 return tryTranslators();
             }
             @catch (NSException *exception) {
