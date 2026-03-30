@@ -167,11 +167,235 @@ std::unique_ptr<GraphBackend> AdjacencyListBackend::clone() const {
 }
 
 
+
+// БЕКЕНД НА ОСНОВЕ МАТРИЦЫ СМЕЖНОСТИ
+AdjacencyMatrixBackend::AdjacencyMatrixBackend(bool directed, int initialSize)
+    : directed_(directed), edgeCount_(0) {
+    matrix_.resize(initialSize, std::vector<double>(initialSize, 0.0));
+}
+
+AdjacencyMatrixBackend::AdjacencyMatrixBackend(const AdjacencyMatrixBackend& other): 
+    matrix_(other.matrix_),
+    vertexToIndex_(other.vertexToIndex_),
+    indexToVertex_(other.indexToVertex_),
+    directed_(other.directed_),
+    edgeCount_(other.edgeCount_) {}
+
+AdjacencyMatrixBackend& AdjacencyMatrixBackend::operator=(const AdjacencyMatrixBackend& other) {
+    if (this != &other) {
+        matrix_ = other.matrix_;
+        vertexToIndex_ = other.vertexToIndex_;
+        indexToVertex_ = other.indexToVertex_;
+        directed_ = other.directed_;
+        edgeCount_ = other.edgeCount_;
+    }
+    return *this;
+}
+
+int AdjacencyMatrixBackend::getIndex(int vertex) const {
+    auto it = vertexToIndex_.find(vertex);
+    if (it == vertexToIndex_.end()) return -1;
+    return it->second;
+}
+
+int AdjacencyMatrixBackend::addIndex(int vertex) {
+    auto it = vertexToIndex_.find(vertex);
+    if (it != vertexToIndex_.end()) return it->second;
+    
+    int idx = static_cast<int>(vertexToIndex_.size());
+    ensureCapacity(idx + 1);
+    
+    vertexToIndex_[vertex] = idx;
+    indexToVertex_.push_back(vertex);
+    return idx;
+}
+
+void AdjacencyMatrixBackend::ensureCapacity(int minSize) {
+    if (minSize > static_cast<int>(matrix_.size())) {
+        int newSize = std::max(minSize, static_cast<int>(matrix_.size() * 2));
+        matrix_.resize(newSize, std::vector<double>(newSize, 0.0));
+        for (auto& row : matrix_) {
+            row.resize(newSize, 0.0);
+        }
+    }
+}
+
+void AdjacencyMatrixBackend::addVertex(int vertex) {
+    if (hasVertex(vertex)) return;
+    addIndex(vertex);
+}
+
+void AdjacencyMatrixBackend::removeVertex(int vertex) {
+    int idx = getIndex(vertex);
+    if (idx == -1) return;
+    
+    // Считаем удаляемые рёбра
+    for (int j = 0; j < static_cast<int>(indexToVertex_.size()); j++) {
+        if (matrix_[idx][j] != 0.0) edgeCount_--;
+        if (matrix_[j][idx] != 0.0 && (!directed_ || j != idx)) edgeCount_--;
+    }
+    if (!directed_) edgeCount_ /= 2;
+    edgeCount_ += (matrix_[idx][idx] != 0.0 ? 1 : 0); // Петля
+    
+    // Удаляем строку и столбец (помечаем нулями)
+    for (int j = 0; j < static_cast<int>(matrix_.size()); j++) {
+        matrix_[idx][j] = 0.0;
+        matrix_[j][idx] = 0.0;
+    }
+    
+    vertexToIndex_.erase(vertex);
+    indexToVertex_.erase(indexToVertex_.begin() + idx);
+    
+    // Перестраиваем маппинг
+    vertexToIndex_.clear();
+    for (size_t i = 0; i < indexToVertex_.size(); i++) {
+        vertexToIndex_[indexToVertex_[i]] = static_cast<int>(i);
+    }
+}
+
+bool AdjacencyMatrixBackend::hasVertex(int vertex) const {
+    return vertexToIndex_.find(vertex) != vertexToIndex_.end();
+}
+
+int AdjacencyMatrixBackend::vertexCount() const {
+    return static_cast<int>(vertexToIndex_.size());
+}
+
+std::vector<int> AdjacencyMatrixBackend::getAllVertices() const {
+    return indexToVertex_;
+}
+
+void AdjacencyMatrixBackend::addEdge(const Edge& edge) {
+    int fromIdx = addIndex(edge.from);
+    int toIdx = addIndex(edge.to);
+    
+    if (matrix_[fromIdx][toIdx] == 0.0) {
+        matrix_[fromIdx][toIdx] = edge.weight;
+        if (!directed_) {
+            matrix_[toIdx][fromIdx] = edge.weight;
+        }
+        edgeCount_++;
+    }
+}
+
+void AdjacencyMatrixBackend::removeEdge(int from, int to) {
+    int fromIdx = getIndex(from);
+    int toIdx = getIndex(to);
+    
+    if (fromIdx == -1 || toIdx == -1) return;
+    
+    if (matrix_[fromIdx][toIdx] != 0.0) {
+        matrix_[fromIdx][toIdx] = 0.0;
+        if (!directed_) {
+            matrix_[toIdx][fromIdx] = 0.0;
+        }
+        edgeCount_--;
+    }
+}
+
+bool AdjacencyMatrixBackend::hasEdge(int from, int to) const {
+    int fromIdx = getIndex(from);
+    int toIdx = getIndex(to);
+    
+    if (fromIdx == -1 || toIdx == -1) return false;
+    return matrix_[fromIdx][toIdx] != 0.0;
+}
+
+int AdjacencyMatrixBackend::edgeCount() const {
+    return edgeCount_;
+}
+
+std::vector<Edge> AdjacencyMatrixBackend::getAllEdges() const {
+    std::vector<Edge> edges;
+    int n = vertexCount();
+    
+    for (int i = 0; i < n; i++) {
+        int startJ = directed_ ? 0 : i;
+        for (int j = startJ; j < n; j++) {
+            if (matrix_[i][j] != 0.0) {
+                edges.push_back(Edge(indexToVertex_[i], indexToVertex_[j], matrix_[i][j]));
+            }
+        }
+    }
+    return edges;
+}
+
+
+std::vector<int> AdjacencyMatrixBackend::getNeighbors(int vertex) const {
+    std::vector<int> neighbors;
+    int idx = getIndex(vertex);
+    if (idx == -1) return neighbors;
+    
+    int n = vertexCount();
+    for (int j = 0; j < n; j++) {
+        if (matrix_[idx][j] != 0.0) {
+            neighbors.push_back(indexToVertex_[j]);
+        }
+    }
+    return neighbors;
+}
+
+std::vector<Edge> AdjacencyMatrixBackend::getIncidentEdges(int vertex) const {
+    std::vector<Edge> edges;
+    int idx = getIndex(vertex);
+    if (idx == -1) return edges;
+    
+    int n = vertexCount();
+    for (int j = 0; j < n; j++) {
+        if (matrix_[idx][j] != 0.0) {
+            edges.push_back(Edge(indexToVertex_[idx], indexToVertex_[j], matrix_[idx][j]));
+        }
+    }
+    return edges;
+}
+
+int AdjacencyMatrixBackend::getDegree(int vertex) const {
+    return static_cast<int>(getNeighbors(vertex).size());
+}
+
+int AdjacencyMatrixBackend::getInDegree(int vertex) const {
+    if (directed_) {
+        int idx = getIndex(vertex);
+        if (idx == -1) return 0;
+        
+        int count = 0;
+        int n = vertexCount();
+        for (int i = 0; i < n; i++) {
+            if (matrix_[i][idx] != 0.0) count++;
+        }
+        return count;
+    }
+    return getDegree(vertex);
+}
+
+int AdjacencyMatrixBackend::getOutDegree(int vertex) const {
+    return getDegree(vertex);
+}
+
+void AdjacencyMatrixBackend::setDirected(bool directed) {
+    directed_ = directed;
+}
+
+void AdjacencyMatrixBackend::clear() {
+    matrix_.clear();
+    vertexToIndex_.clear();
+    indexToVertex_.clear();
+    edgeCount_ = 0;
+}
+
+std::unique_ptr<GraphBackend> AdjacencyMatrixBackend::clone() const {
+    return std::make_unique<AdjacencyMatrixBackend>(*this);
+}
+
+
+
 // ФАБРИКА ДЛЯ СОЗДАНИЯ БЕКЕНДОВ
 std::unique_ptr<GraphBackend> BackendFactory::create(BackendType type, bool directed) {
     switch (type) {
         case BackendType::AdjacencyList:
             return std::make_unique<AdjacencyListBackend>(directed);
+        case BackendType::AdjacencyMatrix:
+            return std::make_unique<AdjacencyMatrixBackend>(directed);
         default:
             throw std::runtime_error("Unknown backend type");
     }
@@ -180,6 +404,8 @@ std::unique_ptr<GraphBackend> BackendFactory::create(BackendType type, bool dire
 std::unique_ptr<GraphBackend> BackendFactory::create(const std::string& name, bool directed) {
     if (name == "AdjacencyList" || name == "list") {
         return std::make_unique<AdjacencyListBackend>(directed);
+    } else if (name == "AdjacencyMatrix" || name == "matrix") {
+        return std::make_unique<AdjacencyMatrixBackend>(directed);
     }
     throw std::runtime_error("Unknown backend: " + name);
 }
