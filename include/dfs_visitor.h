@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "graph.h"
+#include "graph.hpp"
 #include <unordered_map>
 #include <vector>
 

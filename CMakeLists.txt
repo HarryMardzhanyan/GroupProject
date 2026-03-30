@@ -1,19 +1,23 @@
-cmake_minimum_required(VERSION 4.0)
-project(untitled3)
-
+cmake_minimum_required(VERSION 3.10)
+project(GraphDro4)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Общие флаги компилятора
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(GLOBAL_WARNINGS "-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wunused")
+endif()
 
-include_directories(include external)
+# Создаём библиотеку из общих исходников
+add_library(
+    src/graph.cpp
+    src/graph_backend.cpp
+)
 
-
-add_executable(untitled3
-        src/graph.cpp
-        src/graph.cpp
-        external/catch.hpp
-        include/graph.hpp
-        include/dfs_visitor.h
-
+# Добавляем заголовочные файлы для библиотеки
+target_include_directories(calc_lib PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external
 )

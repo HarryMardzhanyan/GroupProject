@@ -6,8 +6,18 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <algorithm>
+#include <iomanip>
+#include <sstream>
 
 namespace grapho {
+
+enum class VertexState {
+    White,  // Не посещена (по умолчанию)
+    Gray,   // В процессе обработки
+    Black   // Обработана
+};
+
 
 // Структура, которая описывает ребро графа
 struct Edge {
@@ -26,77 +36,29 @@ struct Color {
     std::string toHex() const;   // Функция, чтобы превратить внутреннее цвет вершины в формат, понятный сайтам, где рисуют графы
 };
 
+// Forward Declaration
+class GraphBackend;
 
-// Абстрактный класс для хранения структуры графа (Основной Backend)
-class GraphBackend {
-public:
-    virtual ~GraphBackend() = default;
-    
-    virtual void addVertex(int vertex) = 0;
-    virtual void removeVertex(int vertex) = 0;
-    virtual bool hasVertex(int vertex) const = 0;
-    virtual int vertexCount() const = 0;
-    virtual std::vector<int> getAllVertices() const = 0;
-    
-    virtual void addEdge(const Edge& edge) = 0;
-    virtual void removeEdge(int from, int to) = 0;
-    virtual bool hasEdge(int from, int to) const = 0;
-    virtual int edgeCount() const = 0;
-    virtual std::vector<Edge> getAllEdges() const = 0;
-    
-    virtual std::vector<int> getNeighbors(int vertex) const = 0;
-    virtual std::vector<Edge> getIncidentEdges(int vertex) const = 0;
-    
-    virtual int getDegree(int vertex) const = 0;
-    virtual int getInDegree(int vertex) const = 0;
-    virtual int getOutDegree(int vertex) const = 0;
+// Тип бекенда
+enum class BackendType {
+    AdjacencyList,
+    AdjacencyMatrix
 };
-
-
-// Бекенд на основе матрицы смежности (мб лучше в отдельный парчер вынести)
-class AdjacencyListBackend : public GraphBackend {
-private:
-    std::unordered_map<int, std::vector<Edge>> adjacencyList_;
-    std::unordered_set<int> vertices_;
-    bool directed_;
-    
-public:
-    explicit AdjacencyListBackend(bool directed = false);
-    
-    void addVertex(int vertex) override;
-    void removeVertex(int vertex) override;
-    bool hasVertex(int vertex) const override;
-    int vertexCount() const override;
-    std::vector<int> getAllVertices() const override;
-    
-    void addEdge(const Edge& edge) override;
-    void removeEdge(int from, int to) override;
-    bool hasEdge(int from, int to) const override;
-    int edgeCount() const override;
-    std::vector<Edge> getAllEdges() const override;
-    
-    std::vector<int> getNeighbors(int vertex) const override;
-    std::vector<Edge> getIncidentEdges(int vertex) const override;
-    
-    int getDegree(int vertex) const override;
-    int getInDegree(int vertex) const override;
-    int getOutDegree(int vertex) const override;
-};
-
-
 
 // ОСНОВНОЙ КЛАСС ГРАФА
 class Graph {
 private:
     std::unique_ptr<GraphBackend> backend_;
-    std::unordered_map<int, Color> vertexColors_;
-    std::unordered_map<std::string, Color> edgeColors_;
-    bool directed_;
+    std::unordered_map<int, VertexState> vertexColors_;
+    BackendType backendType_;
 
 public:
     // Конструктор графа
     // Бекенд создан для хранения структуры (по умолчанию список смежности)
-    explicit Graph(bool directed = false, std::unique_ptr<GraphBackend> backend = nullptr);
+    explicit Graph(bool directed = false, BackendType type = BackendType::AdjacencyList);
+    Graph& operator=(const Graph& other);
+    Graph(Graph&& other) noexcept;
+    Graph& operator=(Graph&& other) noexcept;
 
     // РАБОТА С ВЕРШИНАМИ
     // Добавить вершину в граф
@@ -159,10 +121,19 @@ public:
     
     // РАБОТА С ЦВЕТАМИ
     // Установить цвет вершины
-    void setVertexColor(int vertex, const Color& color);
+    void setVertexColor(int vertex, VertexState color);
 
     // Получить цвет вершины
-    std::optional<Color> getVertexColor(int vertex) const;
+    VertexState getVertexColor(int vertex) const;
+
+
+    // БЕКЕНД
+    BackendType getBackendType() const { return backendType_; }
+    bool isDirected() const;
+    bool isEmpty() const { return vertexCount() == 0; }
+
+    // Получить доступ к бекенду
+    const GraphBackend& getBackend() const { return *backend_; }
 
 
     // ОПЕРАЦИИ С ГРАФАМИ
@@ -173,13 +144,7 @@ public:
     void renumberVertices(const std::unordered_map<int, int>& mapping);
 
 
-    // ОТДЕЛЬНЫЕ СВОЙСТВА ГРАФА
-    // Является ли граф направленным
-    bool isDirected() const { return directed_; }
-
-    // Является ли граф пустым
-    bool isEmpty() const { return vertexCount() == 0; }
-
+    // ОЧИСТИТЬ ГРАФ
     void clear();
 };
 
