@@ -142,4 +142,83 @@ int greedIsGood::chromeNum(const grapho::Graph &g, std::unordered_map<int, int>&
     return maxColor + 1;
 }
 
+int Diameter::find(const grapho::Graph& g) {
+    auto vertices = g.getAllVertices();
+    int n = vertices.size();
+    if (n <= 1) return 0;
+
+
+    std::unordered_map<int, int> v_to_idx;
+    for (int i = 0; i < n; ++i) v_to_idx[vertices[i]] = i;
+
+    const int INF = 1e9; // Достаточно большое число
+    std::vector<std::vector<int>> dist(n, std::vector<int>(n, INF));
+
+
+    for (int i = 0; i < n; ++i) dist[i][i] = 0;
+
+    for (int v : vertices) {
+        for (int neighbor : g.getNeighbors(v)) {
+            dist[v_to_idx[v]][v_to_idx[neighbor]] = 1; // Для взвешенных заменить на weight
+        }
+    }
+
+
+    for (int k = 0; k < n; ++k) {
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                if (dist[i][k] < INF && dist[k][j] < INF) {
+                    dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+                }
+            }
+        }
+    }
+
+    int maxDist = 0;
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (dist[i][j] == INF) return -1; // Граф несвязен
+            maxDist = std::max(maxDist, dist[i][j]);
+        }
+    }
+
+    return maxDist;
+}
+
+
+double Transitivity::calculate(const grapho::Graph& g) {
+    long long triangles = 0;
+    long long triads = 0;
+    auto vertices = g.getAllVertices();
+
+    for (int v : vertices) {
+        auto neighbors = g.getNeighbors(v);
+        int k = neighbors.size();
+
+
+        if (k >= 2) {
+            triads += static_cast<long long>(k) * (k - 1) / 2;
+        }
+
+
+        for (size_t i = 0; i < neighbors.size(); ++i) {
+            for (size_t j = i + 1; j < neighbors.size(); ++j) {
+                int u = neighbors[i];
+                int w = neighbors[j];
+
+
+                auto u_adj = g.getNeighbors(u);
+                if (std::find(u_adj.begin(), u_adj.end(), w) != u_adj.end()) {
+                    triangles++;
+                }
+            }
+        }
+    }
+
+    if (triads == 0) return 0.0;
+
+
+    return static_cast<double>(triangles) / triads;
+}
+
 } // namespace grapho

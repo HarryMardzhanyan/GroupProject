@@ -61,14 +61,16 @@ public:
     Graph& operator=(const Graph& other);
     Graph(Graph&& other) noexcept;
     Graph& operator=(Graph&& other) noexcept;
-
+    std::unique_ptr<GraphBackend> releaseBackend() {
+        return std::move(backend_);
+    }
     // РАБОТА С ВЕРШИНАМИ
     // Добавить вершину в граф
     void addVertex(int vertex);
 
     // Удалить вершину из графа
     void removeVertex(int vertex);
-    
+
     // Проверка на наличие вершины в графе
     bool hasVertex(int vertex) const;
 
@@ -112,7 +114,7 @@ public:
     // Получить полустепень исхода. И это для ориентированных графов
     int getOutDegree(int vertex) const;
 
-    
+
     // СВОЙСТВА ВЕРШИН
     // Проверить является ли вершина листом
     bool isLeaf(int vertex) const;
@@ -120,7 +122,7 @@ public:
     // Проверить является ли вершина изолированной
     bool isIsolated(int vertex) const;
 
-    
+
     // РАБОТА С ЦВЕТАМИ
     // Установить цвет вершины
     void setVertexColor(int vertex, VertexState color);

@@ -70,7 +70,15 @@ namespace grapho {
     public:
         std::vector<grapho::Edge> find(const grapho::Graph& g);
     };
+    class Diameter {
+    public:
+        static int find(const grapho::Graph& g);
+    };
 
+    class Transitivity {
+    public:
+        static double calculate(const grapho::Graph& g);
+    };
     class greedIsGood {
     public:
         static int chromeNum(const grapho::Graph &g, std::unordered_map<int, int>& vertexColors);

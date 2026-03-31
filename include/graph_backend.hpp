@@ -14,7 +14,7 @@ namespace grapho {
 class GraphBackend {
 public:
     virtual ~GraphBackend() = default;
-    
+
     virtual void addVertex(int vertex) = 0;
     virtual void removeVertex(int vertex) = 0;
     virtual bool hasVertex(int vertex) const = 0;
@@ -51,7 +51,6 @@ private:
     
 public:
     explicit AdjacencyListBackend(bool directed = false);
-    
     void addVertex(int vertex) override;
     void removeVertex(int vertex) override;
     bool hasVertex(int vertex) const override;

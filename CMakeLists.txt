@@ -19,6 +19,8 @@ add_library(graph_lib STATIC
         src/parsers.cpp
         include/graph_generators.hpp
         include/metrics.hpp
+        src/console.cpp
+        include/serial.hpp
 )
 
 # Настраиваем пути к заголовочным файлам для ЭТОЙ библиотеки
