@@ -54,6 +54,7 @@ private:
 
 public:
     ~Graph();
+    explicit Graph(std::unique_ptr<GraphBackend> backend);
     // Конструктор графа
     // Бекенд создан для хранения структуры (по умолчанию список смежности)
     explicit Graph(bool directed = false, BackendType type = BackendType::AdjacencyList);
@@ -147,6 +148,7 @@ public:
 
     // ОЧИСТИТЬ ГРАФ
     void clear();
+
 };
 
 

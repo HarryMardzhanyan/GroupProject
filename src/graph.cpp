@@ -145,6 +145,13 @@ void Graph::clear() {
     backend_->clear();
     vertexColors_.clear();
 }
+Graph::Graph(std::unique_ptr<GraphBackend> backend)
+    : backend_(std::move(backend)), backendType_(BackendType::AdjacencyList) {
+
+for (int v : backend_->getAllVertices()) {
+    vertexColors_[v] = VertexState::White;
+}
+}
 
 
 } // namespace grapho
