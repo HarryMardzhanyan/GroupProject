@@ -12,67 +12,68 @@
 #include "graph.hpp"
 #include "dfs_visitor.hpp"
 
-
-class ConnectivityCounter : public grapho::DFSVisitor {
-public:
-    int parts(const grapho::Graph& g);
-};
-
-
-class ArticulationPointsFinder : public grapho::DFSVisitor {
-    std::unordered_map<int, int> tin, low;
-    std::set<int> points;
-    int timer = 0;
-    std::unordered_map<int, int> rootChildren;
-    std::unordered_map<int, bool> isRoot;
-
-protected:
-    void discoverVertex(int v) override;
-    void treeEdge(int v, int u) override;
-    void afterTreeEdge(int v, int u) override;
-    void backEdge(int v, int u) override;
-
-public:
-    std::set<int> find(const grapho::Graph& g);
-};
+namespace grapho {
+    class ConnectivityCounter : public grapho::DFSVisitor {
+    public:
+        int parts(const grapho::Graph& g);
+    };
 
 
-class BipartiteChecker : public grapho::DFSVisitor {
-    std::unordered_map<int, int> colors;
-    bool isBipartite = true;
+    class ArticulationPointsFinder : public grapho::DFSVisitor {
+        std::unordered_map<int, int> tin, low;
+        std::set<int> points;
+        int timer = 0;
+        std::unordered_map<int, int> rootChildren;
+        std::unordered_map<int, bool> isRoot;
 
-protected:
-    void treeEdge(int v, int u) override;
-    void backEdge(int v, int u) override;
-    void forwardOrCrossEdge(int v, int u) override;
+    protected:
+        void discoverVertex(int v) override;
+        void treeEdge(int v, int u) override;
+        void afterTreeEdge(int v, int u) override;
+        void backEdge(int v, int u) override;
 
-public:
-    bool check(const grapho::Graph& g);
-};
-
-
-class Density {
-public:
-    static double density(const grapho::Graph& graph);
-};
+    public:
+        std::set<int> find(const grapho::Graph& g);
+    };
 
 
-class BridgeFinder : public grapho::DFSVisitor {
-    std::unordered_map<int, int> tin, low;
-    std::vector<grapho::Edge> bridges;
-    int timer = 0;
+    class BipartiteChecker : public grapho::DFSVisitor {
+        std::unordered_map<int, int> colors;
+        bool isBipartite = true;
 
-protected:
-    void discoverVertex(int v) override;
-    void afterTreeEdge(int v, int u) override;
-    void backEdge(int v, int u) override;
+    protected:
+        void treeEdge(int v, int u) override;
+        void backEdge(int v, int u) override;
+        void forwardOrCrossEdge(int v, int u) override;
 
-public:
-    std::vector<grapho::Edge> find(const grapho::Graph& g);
-};
+    public:
+        bool check(const grapho::Graph& g);
+    };
 
-class greedIsGood {
-public:
-    static int chromeNum(const grapho::Graph &g, std::unordered_map<int, int>& vertexColors);
-};
+
+    class Density {
+    public:
+        static double density(const grapho::Graph& graph);
+    };
+
+
+    class BridgeFinder : public grapho::DFSVisitor {
+        std::unordered_map<int, int> tin, low;
+        std::vector<grapho::Edge> bridges;
+        int timer = 0;
+
+    protected:
+        void discoverVertex(int v) override;
+        void afterTreeEdge(int v, int u) override;
+        void backEdge(int v, int u) override;
+
+    public:
+        std::vector<grapho::Edge> find(const grapho::Graph& g);
+    };
+
+    class greedIsGood {
+    public:
+        static int chromeNum(const grapho::Graph &g, std::unordered_map<int, int>& vertexColors);
+    };
+}
 #endif //GRAPHDRO4_METRICS_HPP
