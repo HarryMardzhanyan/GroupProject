@@ -44,7 +44,6 @@ enum class BackendType {
     AdjacencyList,
     AdjacencyMatrix
 };
-
 // ОСНОВНОЙ КЛАСС ГРАФА
 class Graph {
 private:
@@ -61,9 +60,7 @@ public:
     Graph& operator=(const Graph& other);
     Graph(Graph&& other) noexcept;
     Graph& operator=(Graph&& other) noexcept;
-    std::unique_ptr<GraphBackend> releaseBackend() {
-        return std::move(backend_);
-    }
+    std::unique_ptr<GraphBackend> releaseBackend();
     // РАБОТА С ВЕРШИНАМИ
     // Добавить вершину в граф
     void addVertex(int vertex);

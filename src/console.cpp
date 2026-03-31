@@ -22,7 +22,7 @@ void setupConsole() {
     SetConsoleCP(65001);
     SetConsoleOutputCP(65001);
 #endif
-    std::setlocale(LC_ALL, "Russian");
+//std::setlocale(LC_ALL, "Russian"); если не работает то попробуйте включить
 }
 
 

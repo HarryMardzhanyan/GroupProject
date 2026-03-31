@@ -159,14 +159,23 @@ public:
     static std::string toEdgesFormat(const Graph& g) {
         std::stringstream ss;
         std::set<std::pair<int, int>> seen;
+        bool directed = g.isDirected();
+
+        // Выбираем разделитель: " -> " для ориентированных, " -- " для обычных
+        std::string separator = directed ? " -> " : " -- ";
+
         for (const auto& e : g.getAllEdges()) {
             int u = e.from, v = e.to;
-            if (!g.isDirected()) {
+
+            if (!directed) {
+                // Чтобы не дублировать ребра (1--2 и 2--1) в неориентированном графе
                 if (u > v) std::swap(u, v);
                 if (seen.count({u, v})) continue;
                 seen.insert({u, v});
             }
-            ss << u << " " << v << " " << e.weight << "\n";
+
+            // Формат: v1 -- v2 weight (или v1 -> v2 weight)
+            ss << u << separator << v << " " << e.weight << "\n";
         }
         return ss.str();
     }

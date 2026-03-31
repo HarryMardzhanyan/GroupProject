@@ -21,7 +21,10 @@ Graph& Graph::operator=(const Graph& other) {
     }
     return *this;
 }
-
+    VertexState grapho::Graph::getVertexColor(int vertex) const {
+    auto it = vertexColors_.find(vertex);
+    return (it != vertexColors_.end()) ? it->second : VertexState::White;
+}
 Graph::Graph(Graph&& other) noexcept: backend_(std::move(other.backend_)), vertexColors_(std::move(other.vertexColors_)), backendType_(other.backendType_) {}
 
 Graph& Graph::operator=(Graph&& other) noexcept {
@@ -87,13 +90,15 @@ bool Graph::isIsolated(int vertex) const { return getDegree(vertex) == 0; }
 // ЦВЕТА
 void grapho::Graph::setVertexColor(int vertex, VertexState color) { vertexColors_[vertex] = color; }
 
-VertexState grapho::Graph::getVertexColor(int vertex) const { return VertexState(); }
+
 
 
 // БЕКЕНД
 bool Graph::isDirected() const { return backend_->isDirected(); }
 
-
+    std::unique_ptr<GraphBackend> Graph::releaseBackend() {
+    return std::move(backend_);
+}
 // ОПЕРАЦИИ С ГРАФАМИ
 Graph Graph::unionWith(const Graph& other) const {
     Graph result(isDirected() || other.isDirected(), backendType_);
@@ -145,12 +150,11 @@ void Graph::clear() {
     backend_->clear();
     vertexColors_.clear();
 }
-Graph::Graph(std::unique_ptr<GraphBackend> backend)
-    : backend_(std::move(backend)), backendType_(BackendType::AdjacencyList) {
-
-for (int v : backend_->getAllVertices()) {
-    vertexColors_[v] = VertexState::White;
-}
+    Graph::Graph(std::unique_ptr<GraphBackend> backend)
+        : backend_(std::move(backend)), backendType_(BackendType::AdjacencyList) {
+    for (int v : backend_->getAllVertices()) { // Цикл должен быть внутри скобок {}
+        vertexColors_[v] = VertexState::White;
+    }
 }
 
 
