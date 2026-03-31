@@ -184,8 +184,7 @@ TEST_CASE("Парсер: SNAP", "[parser][snap]") {
     SNAPParser parser;
     
     std::string content = R"(
-# SNAP format graph
-# Comment line
+# Комментарий
 52 1
 52 2
 1 2
