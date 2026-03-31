@@ -160,6 +160,15 @@ TEST_CASE("Парсер: матрица смежности", "[parsers]") {
     
     REQUIRE(graph.vertexCount() == 4);
     REQUIRE(graph.edgeCount() == 4);
+
+    REQUIRE(graph.hasEdge(0, 1));
+    REQUIRE(graph.hasEdge(0, 3));
+    REQUIRE(graph.hasEdge(1, 2));
+    REQUIRE(graph.hasEdge(1, 0));
+    REQUIRE(graph.hasEdge(2, 1));
+    REQUIRE(graph.hasEdge(2, 3));
+    REQUIRE(graph.hasEdge(3, 0));
+    REQUIRE(graph.hasEdge(3, 2));
 }
 
 TEST_CASE("Парсер: DIMACS", "[parsers]") {
