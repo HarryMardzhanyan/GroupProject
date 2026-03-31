@@ -5,6 +5,9 @@
 #include <stdexcept>
 
 namespace grapho {
+
+Graph::~Graph() = default;
+
 // Конструкторы и прочее
 Graph::Graph(bool directed, BackendType type) : backendType_(type) {
     backend_ = BackendFactory::create(type, directed);
@@ -144,4 +147,4 @@ void Graph::clear() {
 }
 
 
-} // namespace
+} // namespace grapho

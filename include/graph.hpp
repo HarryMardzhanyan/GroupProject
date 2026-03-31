@@ -53,6 +53,7 @@ private:
     BackendType backendType_;
 
 public:
+    ~Graph();
     // Конструктор графа
     // Бекенд создан для хранения структуры (по умолчанию список смежности)
     explicit Graph(bool directed = false, BackendType type = BackendType::AdjacencyList);
@@ -149,4 +150,4 @@ public:
 };
 
 
-} // Конец namespace
+} // namespace grapho

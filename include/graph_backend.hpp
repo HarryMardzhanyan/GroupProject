@@ -137,4 +137,4 @@ public:
 
 
 
-} // Конец namespace
+} // namespace grapho
