@@ -123,6 +123,7 @@ TEST_CASE("Graph: объединение графов", "[graph]") {
     REQUIRE(result.edgeCount() == 4);
 }
 
+
 // ТЕСТЫ ПАРСЕРОВ
 
 TEST_CASE("Парсер: список рёбер", "[parsers]") {
@@ -144,8 +145,78 @@ TEST_CASE("Парсер: список рёбер", "[parsers]") {
     REQUIRE(graph.hasEdge(4, 5));
 }
 
-#include "graph_generators.hpp"
-#include "metrics.hpp"
+TEST_CASE("Парсер: матрица смежности", "[parsers]") {
+    AdjacencyMatrixParser parser;
+    
+    std::string content = R"(
+4
+0 1 0 1
+1 0 1 0
+0 1 0 1
+1 0 1 0
+)";
+    
+    Graph graph = parser.parseFromString(content);
+    
+    REQUIRE(graph.vertexCount() == 4);
+    REQUIRE(graph.edgeCount() == 4);
+
+    REQUIRE(graph.hasEdge(0, 1));
+    REQUIRE(graph.hasEdge(0, 3));
+    REQUIRE(graph.hasEdge(1, 2));
+    REQUIRE(graph.hasEdge(1, 0));
+    REQUIRE(graph.hasEdge(2, 1));
+    REQUIRE(graph.hasEdge(2, 3));
+    REQUIRE(graph.hasEdge(3, 0));
+    REQUIRE(graph.hasEdge(3, 2));
+}
+
+TEST_CASE("Парсер: DIMACS", "[parsers]") {
+    DIMACSParser parser;
+    
+    std::string content = R"(
+c Комментарий
+p edge 4 4
+e 1 2
+e 2 3
+e 3 4
+e 4 1
+)";
+    
+    Graph graph = parser.parseFromString(content);
+    
+    REQUIRE(graph.vertexCount() == 4);
+    REQUIRE(graph.edgeCount() == 4);
+}
+
+TEST_CASE("Парсер: SNAP", "[parser][snap]") {
+    SNAPParser parser;
+    
+    std::string content = R"(
+# Комментарий
+52 1
+52 2
+1 2
+1 3
+2 3
+3 4
+)";
+    
+    Graph graph = parser.parseFromString(content, false);
+    
+    REQUIRE(graph.vertexCount() == 5);
+    REQUIRE(graph.edgeCount() == 6);
+    
+    REQUIRE(graph.hasEdge(52, 1));
+    REQUIRE(graph.hasEdge(52, 2));
+    REQUIRE(graph.hasEdge(1, 2));
+    REQUIRE(graph.hasEdge(1, 3));
+    REQUIRE(graph.hasEdge(2, 3));
+    REQUIRE(graph.hasEdge(3, 4));
+}
+
+
+// ТЕСТЫ МЕТРИК
 
 TEST_CASE("Connectivity metrics", "[metrics]") {
     ConnectivityCounter counter;
@@ -208,6 +279,10 @@ TEST_CASE("Coloring and Density", "[metrics]") {
         REQUIRE(chi == 5);
     }
 }
+
+
+// ТЕСТЫ ГЕНЕРАТОРОВ
+
 TEST_CASE("Basic Generators: Structural Correctness", "[generators]") {
 
     SECTION("Complete Graph K_n") {
