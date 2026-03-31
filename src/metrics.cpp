@@ -3,7 +3,7 @@
 
 namespace grapho {
 
-// --- ConnectivityCounter ---
+
 int ConnectivityCounter::parts(const grapho::Graph& g) {
     int components = 0;
     std::unordered_map<int, grapho::VertexState> states;
@@ -18,7 +18,7 @@ int ConnectivityCounter::parts(const grapho::Graph& g) {
     return components;
 }
 
-// --- ArticulationPointsFinder ---
+
 void ArticulationPointsFinder::discoverVertex(int v) {
     tin[v] = low[v] = ++timer;
 }
@@ -57,7 +57,7 @@ std::set<int> ArticulationPointsFinder::find(const grapho::Graph& g) {
     return points;
 }
 
-// --- BipartiteChecker ---
+
 void BipartiteChecker::treeEdge(int v, int u) {
     colors[u] = 1 - colors[v];
 }
@@ -85,7 +85,7 @@ bool BipartiteChecker::check(const grapho::Graph& g) {
     return isBipartite;
 }
 
-// --- Density ---
+
 double Density::density(const grapho::Graph& graph) {
     long long n = graph.vertexCount();
     if (n <= 1) return 0.0;
@@ -94,7 +94,7 @@ double Density::density(const grapho::Graph& graph) {
     return (maxEdges == 0) ? 0.0 : (double)e / maxEdges;
 }
 
-// --- BridgeFinder ---
+
 void BridgeFinder::discoverVertex(int v) {
     tin[v] = low[v] = ++timer;
 }
@@ -123,7 +123,7 @@ std::vector<grapho::Edge> BridgeFinder::find(const grapho::Graph& g) {
     return bridges;
 }
 
-// --- greedIsGood ---
+
 int greedIsGood::chromeNum(const grapho::Graph &g, std::unordered_map<int, int>& vertexColors) {
     vertexColors.clear();
     auto vertices = g.getAllVertices();
