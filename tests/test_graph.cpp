@@ -8,6 +8,7 @@
 #include "parsers.hpp"
 #include "metrics.hpp"
 #include "graph_generators.hpp"
+#include "serial.hpp"
 #include <sstream>
 
 using namespace grapho;
@@ -392,4 +393,88 @@ TEST_CASE("Generators Edge Cases", "[generators]") {
         auto wheel = simpleGenerator(3, fillWheel);
         REQUIRE(wheel->edgeCount() == 0);
     }
+}
+
+
+// ТЕСТЫ НА СЕРИАЛИЗАЦИЮ ГРАФОВ
+
+TEST_CASE("GraphSerializer - toEdgesFormat: No duplicate edges in undirected", "[serialization][edges]") {
+    Graph g(false, BackendType::AdjacencyList);
+    g.addEdge(1, 2, 1.0);
+    g.addEdge(2, 1, 1.0); // Дубликат в обратном направлении
+    
+    std::string result = GraphSerializer::toEdgesFormat(g);
+    
+    // Должно быть только одно ребро
+    auto count = std::count(result.begin(), result.end(), '\n');
+    REQUIRE(count == 1);
+    REQUIRE(result.find("1 -- 2") != std::string::npos);
+}
+
+TEST_CASE("GraphSerializer - toEdgesFormat: Directed graph", "[serialization][edges]") {
+    Graph g(true, BackendType::AdjacencyList);
+    g.addEdge(1, 2, 1.0);
+    g.addEdge(2, 3, 2.0);
+    
+    std::string result = GraphSerializer::toEdgesFormat(g);
+    
+    // Для ориентированных графов используется "->"
+    REQUIRE(result.find("1 -> 2") != std::string::npos);
+    REQUIRE(result.find("2 -> 3") != std::string::npos);
+    REQUIRE(result.find("--") == std::string::npos); // Не должно быть "--"
+}
+
+TEST_CASE("GraphSerializer - toGraphViz: Empty graph", "[serialization][graphviz]") {
+    Graph g;
+    std::string result = GraphSerializer::toGraphViz(g);
+    
+    // Проверяем базовую структуру DOT файла
+    REQUIRE(result.find("graph") != std::string::npos);
+    REQUIRE(result.find("G") != std::string::npos);
+    REQUIRE(result.find("{") != std::string::npos);
+    REQUIRE(result.find("}") != std::string::npos);
+}
+
+TEST_CASE("GraphSerializer - toGraphViz: Undirected graph header", "[serialization][graphviz]") {
+    Graph g(false, BackendType::AdjacencyList);
+    g.addEdge(1, 2, 1.0);
+    
+    std::string result = GraphSerializer::toGraphViz(g);
+    
+    REQUIRE(result.find("graph") != std::string::npos);
+    REQUIRE(result.find("node") != std::string::npos);
+    REQUIRE(result.find("shape=circle") != std::string::npos);
+}
+
+TEST_CASE("GraphSerializer - toGraphViz: Highlighted edges", "[serialization][graphviz]") {
+    Graph g(false, BackendType::AdjacencyList);
+    g.addEdge(1, 2, 1.0);
+    g.addEdge(2, 3, 1.0);
+    g.addEdge(3, 4, 1.0);
+    
+    std::vector<Edge> highlightEdges = {Edge(1, 2, 1.0), Edge(3, 4, 1.0)};
+    std::string result = GraphSerializer::toGraphViz(g, {}, highlightEdges);
+    
+    // Проверяем, что выделенные рёбра имеют красный цвет
+    REQUIRE(result.find("color=red") != std::string::npos);
+    REQUIRE(result.find("penwidth=2.5") != std::string::npos);
+}
+
+TEST_CASE("GraphSerializer - toGraphViz: No duplicate edges in undirected", "[serialization][graphviz]") {
+    Graph g(false, BackendType::AdjacencyList);
+    g.addEdge(1, 2, 1.0);
+    g.addEdge(2, 1, 1.0); // Дубликат
+    
+    std::string result = GraphSerializer::toGraphViz(g);
+    
+    // Считаем количество строк с рёбрами (содержащих --)
+    size_t edgeCount = 0;
+    std::istringstream iss(result);
+    std::string line;
+    while (std::getline(iss, line)) {
+        if (line.find("--") != std::string::npos) {
+            edgeCount++;
+        }
+    }
+    REQUIRE(edgeCount == 1); // Должно быть только одно ребро
 }
